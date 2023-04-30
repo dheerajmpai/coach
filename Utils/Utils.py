@@ -341,7 +341,8 @@ def test_metrics():
     
 
 def convert_data_for_processing(dataset, isTrain, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict):
-#Convert into data that can be used to train the BKT agent
+  print(len(dataset))
+  #Convert into data that can be used to train the BKT agent
   if isTrain:
     exercices = {}
     instanceIdExerciseMap = {}
@@ -445,14 +446,14 @@ def convert_data_for_processing(dataset, isTrain, word_dict, pos_dict, format_di
     token_info.append(morphology)
     exercices[user][instance_id].append(token_info)
 
-    #Done Processing all data. Now final processing
-    exercices_merged = []
-    for user in exercices:
-        for instance_id in exercices[user]:
-            exercices_merged.append(exercices[user][instance_id])
+  #Done Processing all data. Now final processing
+  exercices_merged = []
+  for user in exercices:
+      for instance_id in exercices[user]:
+          exercices_merged.append(exercices[user][instance_id])
 
-    for instance_id in instanceIdExerciseMap:
-        instanceIdExerciseMap[instance_id] = " ".join(instanceIdExerciseMap[instance_id])
-    
-    encodings = sBertModel.encode(list(instanceIdExerciseMap.values()), show_progress_bar = True)
-    return exercices_merged, instanceIdExerciseMap,encodings, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict, wordVocab, posVocab, formatVocab, depLabelVocab, morphFeatureVocab
+  for instance_id in instanceIdExerciseMap:
+      instanceIdExerciseMap[instance_id] = " ".join(instanceIdExerciseMap[instance_id])
+  
+  encodings = sBertModel.encode(list(instanceIdExerciseMap.values()), show_progress_bar = True)
+  return exercices_merged, instanceIdExerciseMap,encodings, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict, wordVocab, posVocab, formatVocab, depLabelVocab, morphFeatureVocab

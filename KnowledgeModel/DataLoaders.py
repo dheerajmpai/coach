@@ -108,13 +108,13 @@ def prepare_data():
     wordLabelVocab = ["unk"]
     
     #Add path to files here
-    training_data, training_labels = load_data("/content/en_es/en_es.slam.20190204.train")
+    training_data, training_labels = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.train")
     
-    valid_data = load_data("/content/en_es/en_es.slam.20190204.dev")
-    valid_labels = load_labels("/content/en_es/en_es.slam.20190204.dev.key")
+    valid_data = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.dev")
+    valid_labels = load_labels("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.dev.key")
     
-    test_data = load_data("/content/en_es/en_es.slam.20190204.test")
-    test_labels = load_labels("/content/en_es/en_es.slam.20190204.test.key")
+    test_data = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.test")
+    test_labels = load_labels("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.test.key")
     
     
     for instance in training_data:
@@ -135,7 +135,7 @@ def prepare_data():
     train_data = ExcerciseDataset(training_data, training_labels, 256)
     train_loader = torch.utils.data.DataLoader(
         dataset     = train_data, 
-        num_workers = 8,
+        num_workers = 2,
         batch_size  = 64, 
         pin_memory  = True,
         shuffle     = True,
@@ -144,7 +144,7 @@ def prepare_data():
     val_dataset = ExcerciseValidationDataset(valid_data, valid_labels, 128)
     val_loader = torch.utils.data.DataLoader(
         dataset     = val_dataset, 
-        num_workers = 8,
+        num_workers = 2,
         batch_size  = 64, 
         pin_memory  = True,
         shuffle     = False,
@@ -153,7 +153,7 @@ def prepare_data():
     test_dataset = ExcerciseValidationDataset(test_data, test_labels, 128)
     test_loader = torch.utils.data.DataLoader(
         dataset     = test_dataset, 
-        num_workers = 8,
+        num_workers = 2,
         batch_size  = 64, 
         pin_memory  = True,
         shuffle     = False,

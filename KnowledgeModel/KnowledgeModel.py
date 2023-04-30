@@ -119,9 +119,39 @@ class Encoder(torch.nn.Module):
         encoder_outputs, encoder_lens = pad_packed_sequence(out, batch_first = True)
         return encoder_outputs, encoder_lens
 
+import math
+
+class Attention(torch.nn.Module):
+  def __init__(self,listener_hidden_size,
+              speller_hidden_size,
+              projection_size):
+    super().__init__()
+    self.Wq = torch.nn.Linear(speller_hidden_size, projection_size, bias=False)
+    self.Wk = torch.nn.Linear(listener_hidden_size, projection_size, bias=False)
+    self.Wv = torch.nn.Linear(listener_hidden_size, projection_size, bias=False)
+    self.projection_size = projection_size
+    torch.nn.init.xavier_normal_(self.Wq.weight)
+    torch.nn.init.xavier_normal_(self.Wk.weight)
+    torch.nn.init.xavier_normal_(self.Wv.weight)
+  
+  def set_key_value(self, encoder_outputs):
+    self.key = self.Wk(encoder_outputs) #(batch_size, timesteps, projection_size)
+    self.value = self.Wv(encoder_outputs) #(batch_size, timesteps, projection_size)
+
+  def compute_context(self, decoder_context):
+    query = self.Wq(decoder_context) #(batch_size, projection_size)
+
+    raw_weights = torch.einsum('Bp,Btp->Bt', query, self.key) / float(math.sqrt(self.projection_size))
+
+    attention_weights = torch.nn.functional.softmax(raw_weights, dim = 1)
+
+    attention_context = torch.einsum('Bt,Btp->Bp', attention_weights, self.value)
+
+    return attention_context, attention_weights
+
 class Decoder(torch.nn.Module):
 
-    def __init__(self,token_embedding_weight, decoder_hidden_size,projection_size,token_vocabulary_size,pos_vocabulary_size,depLabelVocab_size, output_size = 1):
+    def __init__(self,attender: Attention,token_embedding_weight, decoder_hidden_size,projection_size,token_vocabulary_size,pos_vocabulary_size,depLabelVocab_size, output_size = 1):
         super().__init__()
 
         #self.user_embedding = torch.nn.Embedding(len(user_vocabulary), 10)
@@ -131,6 +161,7 @@ class Decoder(torch.nn.Module):
         self.dependency_embedding = torch.nn.Embedding(depLabelVocab_size, 10)
 
         self.projection_size = projection_size
+        self.attention = attender
 
         self.lstm1 = torch.nn.LSTM(input_size = 70, hidden_size = decoder_hidden_size, num_layers = 5, bidirectional = True, batch_first = True, dropout = 0.3)
         self.multi_head_attention1 = torch.nn.MultiheadAttention(2*decoder_hidden_size, 8, batch_first=True)
@@ -197,7 +228,9 @@ class KnowledgeModel(torch.nn.Module):
               weights_matrix[i] = np.random.normal(scale=0.6, size=(50, ))
 
         self.encoder        =  Encoder(weights_matrix, encoder_hidden_size, len(token_vocabulary), pos_vocab_size, depLabelVocab_size, wordLabelVocab_size) # TODO: Initialize Encoder
-        self.decoder = Decoder(self.encoder.token_embedding.weight, decoder_hidden_size,projection_size,len(token_vocabulary), pos_vocab_size, depLabelVocab_size, output_size) # TODO: Initialize Decoder 
+        self.attention = Attention(2*encoder_hidden_size,2*decoder_hidden_size,projection_size)
+
+        self.decoder = Decoder(self.attention,self.encoder.token_embedding.weight, decoder_hidden_size,projection_size,len(token_vocabulary), pos_vocab_size, depLabelVocab_size, output_size) # TODO: Initialize Decoder 
         self.multi_head_attention1 = torch.nn.MultiheadAttention(2*encoder_hidden_size, 8, batch_first=True)
         self.batchnorm1 = torch.nn.BatchNorm1d(2*encoder_hidden_size)
         self.multi_head_attention2 = torch.nn.MultiheadAttention(2*encoder_hidden_size, 8, batch_first=True)

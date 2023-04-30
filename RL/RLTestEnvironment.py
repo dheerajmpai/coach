@@ -123,7 +123,6 @@ test_data = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.2019020
 
 exercices_merged, instanceIdExerciseMap,encodings, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict, wordVocab, posVocab, formatVocab, depLabelVocab, morphFeatureVocab = convert_data_for_processing(training_data, True, None, None, None, None, None)
 
-#np.random.shuffle(all_ex)
 learner = BKTLearner(len(word_dict),len(pos_dict), len(format_dict), len(dependency_label_dict),len(morphological_feature_dict), 0.1, 0.1, 0.001)
 rlEnv = RLEnvironment(learner, wordVocab, posVocab, depLabelVocab, get_word2vec())
 rlTestEnv = RLTestEnvironment(env = rlEnv, exercise_list = np.array(exercices_merged), exercise_embeddings = encodings, exercise_embedding_size = 768, batch_size = 50, epsilon=0.1, lr=0.1, gamma=0.1, num_episodes = 10, max_iter = 100)
