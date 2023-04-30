@@ -5,7 +5,7 @@ from tqdm import tqdm
 import sys
 sys.path.append("../Utils")
 
-from Utils.Utils import load_data, load_labels
+from Utils import load_data, load_labels
 
 user_keyed_data = {}
 user_keyed_label = {}
@@ -178,7 +178,7 @@ def prepare_data():
         i += 1
         if(i==2):
             break
-    return train_loader, val_loader, test_loader, training_labels, valid_labels, test_labels
+    return train_loader, val_loader, test_loader, training_labels, valid_labels, test_labels, word2Idx, pos2Idx, depLabel2Idx, wordLabel2Idx
      
 class ExcerciseDataset(torch.utils.data.Dataset):
     
@@ -417,10 +417,8 @@ class ExcerciseValidationDataset(torch.utils.data.Dataset):
           days = float((days - min_days)/(max_days - min_days))
           time = float((time - min_time)/(max_time - min_time))
           if(days > 1):
-            print("days maxed")
             days = 1
           if(time > 1):
-            print("time maxed")
             time = 1
 
           label = labels[instance.instance_id]

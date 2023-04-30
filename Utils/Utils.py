@@ -30,6 +30,8 @@ def get_word2vec():
 
     word2vec = pickle.load(open(f'/content/drive/MyDrive/SLAM/6B.50_word2Vec.pkl', 'rb'))
 
+    return word2vec
+
 #Helper Classes for data loading
 class InstanceData(object):
     """

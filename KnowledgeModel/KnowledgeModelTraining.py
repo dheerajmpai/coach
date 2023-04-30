@@ -1,5 +1,5 @@
 from DataLoaders import prepare_data
-from KnowledgeModel import KnowlegeModel
+from KnowledgeModel import KnowledgeModel
 import torch
 from tqdm import tqdm
 import numpy as np
@@ -7,7 +7,7 @@ import gc
 import wandb
 import sys
 sys.path.append("../Utils")
-from Utils.Utils import evaluate_metrics
+from Utils import evaluate_metrics, get_word2vec
 from future.utils import iterkeys, iteritems
 
 
@@ -37,18 +37,17 @@ def train_model(model, train_loader, criterion, optimizer):
             loss="{:.04f}".format(float(total_loss / (i + 1))),
             lr="{:.06f}".format(float(optimizer.param_groups[0]['lr'])))
 
-        batch_bar.update() # Update tqdm bar
+        batch_bar.update()
 
-        # Another couple things you need for FP16. 
-        scaler.scale(loss).backward() # This is a replacement for loss.backward()
-        scaler.step(optimizer) # This is a replacement for optimizer.step()
-        scaler.update() # This is something added just for FP16
+        scaler.scale(loss).backward() 
+        scaler.step(optimizer) 
+        scaler.update()
 
         del x_encoder,x_decoder,y_encoder,y_decoder,lx_encoder,lx_decoder, ly_encoder, ly_decoder, decoder_out, loss 
         torch.cuda.empty_cache()
-        #gc.collect()
 
-    batch_bar.close() # You need this to close the tqdm bar
+
+    batch_bar.close()
     
     return total_loss / len(train_loader)
 
@@ -91,8 +90,15 @@ def validate_model(model, val_loader):
 
 if __name__ == '__main__':
     
-    train_loader, val_loader, test_loader, training_labels, valid_labels, test_labels = prepare_data()
+    train_loader, val_loader, test_loader, training_labels, \
+    valid_labels, test_labels,  word2Idx, pos2Idx, depLabel2Idx, wordLabel2Idx = prepare_data()
+    
     model = KnowledgeModel(
+        token_vocabulary = list(word2Idx.keys()),
+        pos_vocab_size = len(list(pos2Idx.keys())),
+        depLabelVocab_size = len(list(depLabel2Idx.keys())),
+        wordLabelVocab_size = len(list(wordLabel2Idx.keys())),
+        word2vec = get_word2vec(),
         encoder_hidden_size  = 128,
         decoder_hidden_size = 128,
         projection_size = 256,
@@ -109,10 +115,10 @@ if __name__ == '__main__':
 
     actual = []
     for instance_id in iterkeys(test_labels):
-    try:
-        actual.append(test_labels[instance_id])
-    except KeyError:
-        print('No prediction for instance ID ' + instance_id + '!')
+      try:
+          actual.append(test_labels[instance_id])
+      except KeyError:
+          print('No prediction for instance ID ' + instance_id + '!')
 
     wandb.login(key="4a6e96eb645ce23f4ada4b7f5106dcbaed287c63")
     run = wandb.init(
@@ -124,7 +130,7 @@ if __name__ == '__main__':
     )
 
 
-    best_f1 = float('inf')
+    best_f1 = float('-inf')
     for epoch in range(0, 50):
 
         print("\nEpoch: {}/{}".format(epoch+1, 50))
@@ -142,10 +148,6 @@ if __name__ == '__main__':
         ev_Res = evaluate_metrics(actual, res[:,1])
         f1 = ev_Res[2]
         print(ev_Res)
-
-        # Plot Attention for a single item in the batch
-        #plot_attention(attn_wts[0].cpu().detach().numpy())
-
 
         wandb.log({
             'train_loss': train_loss,  

@@ -4,10 +4,10 @@ import sys
 sys.path.append("../SimulatedLearner")
 sys.path.append("../Utils")
 
-from SimulatedLearner.BKTLearner import BKTLearner
+from BKTLearner import BKTLearner
 from KMStateManager import KMStateManager
 from RLEnvironment import RLEnvironment
-from Utils.Utils  import load_data,convert_data_for_processing , get_word2vec
+from Utils  import load_data,convert_data_for_processing , get_word2vec
 import wandb
 
 class RLTestEnvironment(object):
