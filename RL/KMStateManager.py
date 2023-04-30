@@ -1,6 +1,9 @@
 import pickle
 import torch
 
+import sys
+sys.path.append("../KnowledgeModel")
+from KnowledgeModel import KnowledgeModel
 
 class KMStateManager(object):
 

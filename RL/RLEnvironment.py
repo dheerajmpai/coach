@@ -1,5 +1,6 @@
 import numpy as np
 import wandb
+from KMStateManager import KMStateManager
 
 class RLEnvironment(object):
 

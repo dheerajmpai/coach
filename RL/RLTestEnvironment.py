@@ -118,7 +118,7 @@ run = wandb.init(
     project = "ProjectFinalAblations" ### Project should be created in your wandb account 
 )
 
-training_data, training_labels = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.train")
+training_data, _ = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.train")
 test_data = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.dev")
 
 exercices_merged, instanceIdExerciseMap,encodings, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict, wordVocab, posVocab, formatVocab, depLabelVocab, morphFeatureVocab = convert_data_for_processing(training_data, True, None, None, None, None, None)
