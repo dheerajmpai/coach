@@ -10,6 +10,14 @@ from RLEnvironment import RLEnvironment
 from Utils  import load_data,convert_data_for_processing , get_word2vec
 import wandb
 
+"""
+This is the main RL Agent. This is currently a simple Linear Regression model trained using
+Q-learning to begin with. Future exploration involves modifying the RL agent to try architectures
+such as Actor-Critic networks and optimization techniques such as PPO. The RL Agent currently makes
+use of an epsilon-greedy policy to select an action from a fixed pool of exercise. Every time 
+the agent selects an exercise it performs a single step in the RL Environment and gets a reward.
+This reward is used to train the Q-learning agent. 
+"""
 class RLTestEnvironment(object):
 
   def __init__(self, env, exercise_list, exercise_embeddings, exercise_embedding_size, batch_size, epsilon, lr, gamma, num_episodes, max_iter):
@@ -28,6 +36,11 @@ class RLTestEnvironment(object):
     
     self.epsilon = epsilon
 
+  """
+  Helper function to compute the Q value for a set of actions. 
+  The linear regression model is used to compute the Q-value 
+  given the action and the current state of the system. 
+  """
   def getQValueForActions(self, actions):
     #Actions are embeddings
     current_state = self.env.get_state()
@@ -44,6 +57,11 @@ class RLTestEnvironment(object):
 
     return np.array(q_values)
 
+  """
+  Run a single episode in the RL episode. In each episode
+  the RL agent selects exercises from a pool until it
+  decides to terminate the episode. 
+  """
   def run_one_episode(self):
     net_reward = 0;
     
@@ -99,6 +117,10 @@ class RLTestEnvironment(object):
           break
 
     return net_reward
+  
+  """
+  Run the training over multiple episodes.
+  """
   def run_training(self):
     reward_over_episodes = []
     for episode in range(self.num_episodes):
@@ -121,7 +143,11 @@ run = wandb.init(
 training_data, _ = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.train")
 test_data = load_data("/content/drive/MyDrive/SLAM/data_en_es/en_es.slam.20190204.dev")
 
-exercices_merged, instanceIdExerciseMap,encodings, word_dict, pos_dict, format_dict, dependency_label_dict, morphological_feature_dict, wordVocab, posVocab, formatVocab, depLabelVocab, morphFeatureVocab = convert_data_for_processing(training_data, True, None, None, None, None, None)
+exercices_merged, instanceIdExerciseMap,encodings, \
+  word_dict, pos_dict, format_dict, dependency_label_dict, \
+    morphological_feature_dict, wordVocab, posVocab, formatVocab, \
+      depLabelVocab, morphFeatureVocab = convert_data_for_processing(training_data, \
+        True, None, None, None, None, None)
 
 learner = BKTLearner(len(word_dict),len(pos_dict), len(format_dict), len(dependency_label_dict),len(morphological_feature_dict), 0.1, 0.1, 0.001)
 rlEnv = RLEnvironment(learner, wordVocab, posVocab, depLabelVocab, get_word2vec())

@@ -5,8 +5,13 @@ import sys
 sys.path.append("../KnowledgeModel")
 from KnowledgeModel import KnowledgeModel
 
+"""
+This class is a helper for the RL Environment. It keeps track of the history of interactions
+of the agent with the user and then makes use of that history to generate the knowledge
+state of the user. This class makes use of the pre-trained knowledge model to generate
+the knowledge vector. The knowledge vector is used as the state vector in the RL Environment. 
+"""
 class KMStateManager(object):
-
   def load_pickle_obj(self, filename):
     with open(filename, "rb") as file:
       return pickle.load(file)
@@ -18,10 +23,12 @@ class KMStateManager(object):
     self.current_state = torch.zeros((256))
 
 
+  #Initialise the Knowledge state manager. Load the knowledge model weights along
+  # with the token dictionary for the same.
   def __init__(self,bktTokenVocab,bktPosVocab,bktdepLabelVocab, word2VecDict):
     self.most_recent_history = torch.zeros((1,128,4))
     self.most_recent_history_labels = torch.full((1,128), 2)
-    self.most_recent_history_len = 0;
+    self.most_recent_history_len = 0
     self.current_state = torch.zeros((256))
 
     #Add path to the dictionaries for the pre-trained KM Model
@@ -61,6 +68,9 @@ class KMStateManager(object):
   def get_state(self):
     return self.current_state
   
+  #Update the history of the agent and make use of the updated history
+  #to recompute the knowledge state.This should be called at every step 
+  #the agent interacts with the user.  
   def update_state(self, exercise, answers):
     
     for i, token_info in enumerate(exercise):

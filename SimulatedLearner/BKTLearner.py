@@ -1,7 +1,17 @@
+"""
+This is the main class that helps in creating a simulated learner
+which will be used to train the RL agent. 
+
+The implementation is based on http://act-r.psy.cmu.edu/wordpress/wp-content/uploads/2012/12/893CorbettAnderson1995.pdf
+
+Author: Deigant Yadava (dyadava)
+"""
 import numpy as np
 import wandb
 
 class BKTLearner(object):
+    
+    #Initialise the state of the BKT learner. This consists of the information of each skill being in the learnt state
     def __init__(self, token_state_size, pos_state_size, format_state_size, dependency_state_size, morphological_state_size, slip_prob, transition_prob, guess_prob):
         self.token_state_size = token_state_size
         self.pos_state_size = pos_state_size
@@ -20,6 +30,7 @@ class BKTLearner(object):
         self.transition_prob = transition_prob
         self.guess_prob = guess_prob
     
+    #reset to initial state
     def reset(self):
         self.token_state = np.full(self.token_state_size,0, dtype = np.float32)
         self.pos_state = np.full(self.pos_state_size,0,dtype = np.float32)
@@ -28,6 +39,7 @@ class BKTLearner(object):
         self.morphological_state = np.full(self.morphological_state_size,0,dtype = np.float32)
         
 
+    #Get the probability of a token being in the learnt state
     def getNetLearnedProb(self,token_info):
       token_index = token_info[0]
       pos_index = token_info[1]
@@ -40,6 +52,7 @@ class BKTLearner(object):
 
       return net_learned
 
+    #Predict the probability of the user getting the answer correct
     def predictAnswerProbabilities(self, input):
         answer = []
         for token_info in input:
@@ -48,6 +61,7 @@ class BKTLearner(object):
             answer.append(p_correct)
         return np.array(answer)
 
+    #Predict a probabilistic answer of the user on the given exercise
     def predictAnswer(self, input):
         answer = []
         for token_info in input:
@@ -57,6 +71,7 @@ class BKTLearner(object):
             answer.append(value)
         return np.array(answer)
     
+    #Get the posterior probability after getting the observation
     def getPosterior(self, prob, output_correctness):
       if output_correctness == 1:
         posterior = prob*(1 - self.slip_prob) / (prob*(1 - self.slip_prob) + (1 - prob)*self.guess_prob)
@@ -64,6 +79,7 @@ class BKTLearner(object):
         posterior = prob*(self.slip_prob) / (prob*(self.slip_prob) + (1 - prob)*(1 - self.guess_prob))
       return posterior
 
+    #Update the state vector of the user based on the posterior probability
     def updateKnowledgeState(self, output_correctness, input):
         i = 0
         for token_info in input:
@@ -85,16 +101,22 @@ class BKTLearner(object):
            self.morphological_state[index] = morpho_posterior + (1 - morpho_posterior) * self.transition_prob
           i += 1 
 
+    #'Train' the simulated learner on a set of exercises. This function predicts the 
+    # response of the user on the exercises and then uses that to update the knowledge
+    # state
     def trainOneSet(self, excercises):
         for exercise in excercises:
             answer_correctness = self.predictAnswer(exercise)
             self.updateKnowledgeState(answer_correctness, exercise)
     
+    #Same as trainOneSet but for a single exercise.
     def trainOneExercise(self, exercise):
       answer_correctness = self.predictAnswer(exercise)
       self.updateKnowledgeState(answer_correctness, exercise)
       return answer_correctness
 
+    #Generates the probability that the user will answer a question correctly
+    #given a particular set of test exercises.
     def testOneSetProbabilities(self, excercises):
         answer_correctness = []
         for exercise in excercises:
@@ -102,6 +124,7 @@ class BKTLearner(object):
             answer_correctness.append(answer_correctness_ex)
         return np.array(answer_correctness)
 
+    #Predict the answers of the user on a set of test exercises
     def testOneSet(self, excercises):
         answer_correctness = []
         for exercise in excercises:
@@ -109,6 +132,7 @@ class BKTLearner(object):
             answer_correctness.append(answer_correctness_ex)
         return np.array(answer_correctness)
         
+    #Helper function to compute accuracy.
     def computeAccuracyForTest(self, test_response):
         correct = 0;
         total = 0;
@@ -122,6 +146,7 @@ class BKTLearner(object):
 
         return float(correct)/total * 100
     
+    #Test function to run a simulation on a BKT learning.
     def train(self, exercices_all, train_duration, test_duration):
         i = 0;
         accuracy = 0

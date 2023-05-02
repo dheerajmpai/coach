@@ -2,6 +2,13 @@ import numpy as np
 import wandb
 from KMStateManager import KMStateManager
 
+"""
+This is the main environment that is used to train the RL Agent. It performs two functions:
+1. Acts as the interface between the Agent and User/Simulated Learner and plays the actions
+provides by the agent on the learner and observes the results (in the form of the correct/incorrect responses)
+2. Builds an internal representation of the state of the world by making use of knowledge state
+manager
+"""
 class RLEnvironment(object):
 
   def __init__(self, bkt_learner, bktTokenVocab,bktPosVocab,bktdepLabelVocab, word2Vec):
@@ -33,12 +40,12 @@ class RLEnvironment(object):
   def get_available_actions(self):
     return self.train_set_embeddings, self.train_set
 
+  #This function is called by the RL agent to perform one step. 
   def step(self, action, isEpisodeEnd):
     if not isEpisodeEnd:
       answer_correctness = self.bkt_learner.trainOneExercise(action)
       state = self.state_manager.update_state(action, answer_correctness)
 
-    
     if not isEpisodeEnd:
       return self.get_state(), -1
     else:
@@ -48,6 +55,6 @@ class RLEnvironment(object):
       print("Score : " + str(score))
       self.cummulative_score += score - self.start_score
       wandb.log({"reward": score - self.start_score, "cummulative reward":self.cummulative_score})
-      return self.get_state(), score - self.start_score #ToDo: Calculate end score on test set here.
+      return self.get_state(), score - self.start_score #Calculate end score on test set here.
 
   

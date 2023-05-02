@@ -1,3 +1,7 @@
+"""
+This file consists of the main functions used to train the knowledge model.
+"""
+
 from DataLoaders import prepare_data
 from KnowledgeModel import KnowledgeModel
 import torch
@@ -10,9 +14,7 @@ sys.path.append("../Utils")
 from Utils import evaluate_metrics, get_word2vec
 from future.utils import iterkeys, iteritems
 
-
 def train_model(model, train_loader, criterion, optimizer):
-    
     model.train()
     batch_bar = tqdm(total=len(train_loader), dynamic_ncols=True, leave=False, position=0, desc='Train') 
 
